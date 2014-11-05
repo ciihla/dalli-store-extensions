@@ -13,9 +13,43 @@ class KeySet < Set
     @@singleton__instance__
   end
 
+
+
+  def add_with_cache(value)
+    with_mutex { add_without_cache(value) }
+  ensure
+    store
+  end
+
+  alias_method_chain :add, :cache
+
+  def delete_with_cache(value)
+    with_mutex { delete_without_cache(value) }
+  ensure
+    store
+  end
+
+  alias_method_chain :delete, :cache
+
+  def clear_with_cache
+    with_mutex { clear_without_cache }
+  ensure
+    store
+  end
+
+  alias_method_chain :clear, :cache
+
+  private
+  def store
+    @store.with do |connection|
+      @store.send(:write_entry_without_match_support, @store_key, self.to_a.to_yaml, { connection: connection})
+    end
+  end
+
   def initialize(store, store_key)
     @store = store
     @store_key = store_key
+    @mutex = Mutex.new
 
     if existing=@store.send(:read_entry, @store_key, {})
       if existing.is_a? ActiveSupport::Cache::Entry
@@ -28,33 +62,9 @@ class KeySet < Set
     end
   end
 
-  def add_with_cache(value)
-    add_without_cache(value)
-  ensure
-    store
+  def with_mutex
+    @mutex.synchronize { yield }
   end
 
-  alias_method_chain :add, :cache
-
-  def delete_with_cache(value)
-    delete_without_cache(value)
-  ensure
-    store
-  end
-
-  alias_method_chain :delete, :cache
-
-  def clear_with_cache
-    clear_without_cache
-  ensure
-    store
-  end
-
-  alias_method_chain :clear, :cache
-  private
-  def store
-    @store.with do |connection|
-      @store.send(:write_entry_without_match_support, @store_key, self.to_a.to_yaml, { connection: connection})
-    end
-  end
+  private_class_method :new
 end
