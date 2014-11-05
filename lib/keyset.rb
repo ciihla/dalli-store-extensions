@@ -1,17 +1,31 @@
 require 'active_support/core_ext/module/aliasing'
 
 class KeySet < Set
+  @@singleton__instance__ = nil
+  @@singleton__mutex__ = Mutex.new
+
+  def self.instance(store, store_key)
+    return @@singleton__instance__ if @@singleton__instance__
+    @@singleton__mutex__.synchronize do
+      return @@singleton__instance__ if @@singleton__instance__
+      @@singleton__instance__ = new(store, store_key)
+    end
+    @@singleton__instance__
+  end
+
   def initialize(store, store_key)
     @store = store
     @store_key = store_key
 
-
     if existing=@store.send(:read_entry, @store_key, {})
-      super(YAML.load(existing))
+      if existing.is_a? ActiveSupport::Cache::Entry
+        super(YAML.load(existing.value))
+      else
+        super(YAML.load(existing))
+      end
     else
       super([])
     end
-
   end
 
   def add_with_cache(value)
