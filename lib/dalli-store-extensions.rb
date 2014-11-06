@@ -33,7 +33,7 @@ class ActiveSupport::Cache::DalliStore
 
   def delete_matched(matcher, options=nil)
     matcher = /^#{matcher}$/ if matcher.is_a? String
-    keys.each do |key|
+    keys.get_keys.each do |key|
       delete_entry(key, options) if key =~ matcher
     end
   end
