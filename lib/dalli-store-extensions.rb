@@ -5,6 +5,14 @@ require 'keyset'
 class ActiveSupport::Cache::DalliStore
   @@key = "delete_matched_support_key"
 
+  class DalliMutex
+    @@mutex = Mutex.new
+
+    def self.mutex
+      @@mutex
+    end
+  end
+
   def write_entry_with_match_support(key, entry, options)
     keys.add(key)
     write_entry_without_match_support(key, entry, options)
@@ -31,7 +39,7 @@ class ActiveSupport::Cache::DalliStore
   end
 
   def keys
-    @keys ||= KeySet.instance(self, @@key)
+    @keys ||= KeySet.new(self, @@key)
   end
 end
 
