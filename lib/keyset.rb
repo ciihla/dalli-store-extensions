@@ -48,8 +48,8 @@ class KeySet < Set
   def clear_with_cache
     clear_without_cache
   ensure
-    store
     @keys = []
+    store
   end
 
   alias_method_chain :clear, :cache
