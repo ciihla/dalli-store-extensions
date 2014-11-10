@@ -4,6 +4,7 @@ class KeySet < Set
 
   def initialize(store, store_key)
     @store = store
+    @mutex = Mutex.new
     @store_key = store_key
     super(get_keys)
     @keys = self.keys
@@ -64,6 +65,6 @@ class KeySet < Set
   end
 
   def with_mutex
-    ActiveSupport::Cache::DalliStore::DalliMutex.mutex.synchronize { yield }
+    @mutex.synchronize { yield }
   end
 end
