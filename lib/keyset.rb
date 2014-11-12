@@ -11,7 +11,10 @@ class KeySet < Set
   end
 
   def get_keys
-    existing = @store.send(:read_entry, @store_key, {})
+    existing = nil
+    with_mutex do
+      existing = @store.send(:read_entry, @store_key, {})
+    end
 
     if existing
       if existing.is_a? ActiveSupport::Cache::Entry
