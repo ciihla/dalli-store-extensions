@@ -68,6 +68,7 @@ class KeySet < Set
   end
 
   def with_mutex
-    @mutex.synchronize { yield }
+    #@mutex.synchronize { yield }
+    yield
   end
 end
